@@ -198,11 +198,11 @@ func main() {
 		metricsPath   = flag.String("web.telemetry-path", "/metrics", "Path under which to expose metrics.")
 	)
 	flag.Parse()
-  servers := strings.Split(flag.Arg(0),",")
-  for _, server := range servers {
-  	exporter := NewExporter(server)
-	  prometheus.MustRegister(exporter)
-  }
+        servers := strings.Split(flag.Arg(0),",")
+        for _, server := range servers {
+                exporter := NewExporter(server)
+                prometheus.MustRegister(exporter)
+        }
 
 	http.Handle(*metricsPath, prometheus.Handler())
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
