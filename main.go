@@ -19,6 +19,7 @@ const (
 var (
 	cacheOperations  = []string{"get", "delete", "incr", "decr", "cas", "touch"}
 	cacheStatuses    = []string{"hits", "misses"}
+	cmdCounts        = []string{"get", "set", "flush", "touch"}
 	usageTimes       = []string{"curr", "total"}
 	usageResources   = []string{"items", "connections"}
 	bytesDirections  = []string{"read", "written"}
@@ -32,6 +33,7 @@ type Exporter struct {
 	up       prometheus.Gauge
 	uptime   prometheus.Counter
 	cache    *prometheus.CounterVec
+	commands *prometheus.CounterVec
 	usage    *prometheus.GaugeVec
 	bytes    *prometheus.CounterVec
 	removals *prometheus.CounterVec
@@ -61,10 +63,19 @@ func NewExporter(server string) *Exporter {
 			prometheus.CounterOpts{
 				Name:        "cache",
 				Namespace:   namespace,
-				Help:        "The cache hits/misses broken down by command (get, set, etc.).",
+				Help:        "The cache hits/misses broken down by command (get, touch, etc.).",
 				ConstLabels: prometheus.Labels{"server": server},
 			},
 			[]string{"command", "status"},
+		),
+		commands: prometheus.NewCounterVec(
+			prometheus.CounterOpts{
+				Name:        "commands_total",
+				Namespace:   namespace,
+				Help:        "Count of memcache operations by command (set, flush, etc).",
+				ConstLabels: prometheus.Labels{"server": server},
+			},
+			[]string{"command"},
 		),
 		usage: prometheus.NewGaugeVec(
 			prometheus.GaugeOpts{
@@ -103,6 +114,7 @@ func (e *Exporter) Describe(ch chan<- *prometheus.Desc) {
 	ch <- e.uptime.Desc()
 
 	e.cache.Describe(ch)
+	e.commands.Describe(ch)
 	e.usage.Describe(ch)
 	e.bytes.Describe(ch)
 	e.removals.Describe(ch)
@@ -116,6 +128,7 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 	defer e.mutex.Unlock()
 
 	e.cache.Reset()
+	e.commands.Reset()
 	e.usage.Reset()
 	e.bytes.Reset()
 	e.removals.Reset()
@@ -146,6 +159,15 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 				} else {
 					e.cache.WithLabelValues(op, st).Set(float64(m))
 				}
+			}
+		}
+
+		for _, op := range cmdCounts {
+			m, err := strconv.ParseUint(stats[server][fmt.Sprintf("cmd_%s", op)], 10, 64)
+			if err != nil {
+				e.commands.WithLabelValues(op).Set(0)
+			} else {
+				e.commands.WithLabelValues(op).Set(float64(m))
 			}
 		}
 
@@ -188,6 +210,7 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 	ch <- e.up
 	ch <- e.uptime
 	e.cache.Collect(ch)
+	e.commands.Collect(ch)
 	e.usage.Collect(ch)
 	e.bytes.Collect(ch)
 	e.removals.Collect(ch)
