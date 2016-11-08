@@ -2,8 +2,7 @@
 
 This project has been subsumed under the prometheus umbrella at [prometheus/memcached_exporter](https://github.com/prometheus/memcached_exporter). I strongly suggest switching to that repository unless:
 
-- You need to monitor multiple instances per exporter, see: [prometheus/memcached_exporter/#3](https://github.com/prometheus/memcached_exporter/issues/3)
-- You wish to monitor the slab metrics, see: [prometheus/memcached_exporter/#2](https://github.com/prometheus/memcached_exporter/issues/2)
+- You wish to monitor multiple instances per exporter, see: [prometheus/memcached_exporter/#3](https://github.com/prometheus/memcached_exporter/issues/3)
 
 # Memcached Exporter for Prometheus
 
