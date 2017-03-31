@@ -17,7 +17,7 @@ const (
 )
 
 var (
-	cacheOperations  = []string{"get", "delete", "incr", "decr", "cas", "touch"}
+	cacheOperations  = []string{"get", "delete", "incr", "decr", "cas", "touch", "set"}
 	cacheStatuses    = []string{"hits", "misses"}
 	cmdCounts        = []string{"get", "set", "flush", "touch"}
 	usageTimes       = []string{"curr", "total"}
